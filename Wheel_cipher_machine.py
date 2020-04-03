@@ -47,7 +47,6 @@ def Fas_rot(input_num):
             item = init_list_right.pop()
             init_list_right.insert(0, item)
     ind = init_list_right.index(init_list_left[input_num])  # 由index转化到字母index
-    print(init_list_left[input_num])
     return chr(ind+65)
 
 
