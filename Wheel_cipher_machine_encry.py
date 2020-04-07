@@ -1,5 +1,7 @@
-Encry_ti = 0
-enc = ''
+# -*- coding: utf8 -*-
+
+Encry_ti = 0  # 加密次数（加密字符串长度）
+enc = ''  # 密文
 
 
 def Slow_rot(input_str):
