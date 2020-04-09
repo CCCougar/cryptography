@@ -1,6 +1,8 @@
 # -*- coding: utf8 -*-
+# 参照https://github.com/RobinDavid/pydes/blob/c6a1f909569cd2d19568709ad1da3a62ccb5d2cf/pydes.py
 
-# Initial permut matrix for the datas
+
+# 初始置换PI
 PI = [58, 50, 42, 34, 26, 18, 10, 2,
       60, 52, 44, 36, 28, 20, 12, 4,
       62, 54, 46, 38, 30, 22, 14, 6,
@@ -10,7 +12,7 @@ PI = [58, 50, 42, 34, 26, 18, 10, 2,
       61, 53, 45, 37, 29, 21, 13, 5,
       63, 55, 47, 39, 31, 23, 15, 7]
 
-# Initial permut made on the key
+# 子密钥生成时首先进行的置换PC_1
 PC_1 = [57, 49, 41, 33, 25, 17, 9,
         1, 58, 50, 42, 34, 26, 18,
         10, 2, 59, 51, 43, 35, 27,
@@ -20,7 +22,7 @@ PC_1 = [57, 49, 41, 33, 25, 17, 9,
         14, 6, 61, 53, 45, 37, 29,
         21, 13, 5, 28, 20, 12, 4]
 
-# Permut applied on shifted key to get Ki+1
+# 每次循环左移后生成的该轮的子密钥前进行的置换
 PC_2 = [14, 17, 11, 24, 1, 5, 3, 28,
         15, 6, 21, 10, 23, 19, 12, 4,
         26, 8, 16, 7, 27, 20, 13, 2,
@@ -28,7 +30,7 @@ PC_2 = [14, 17, 11, 24, 1, 5, 3, 28,
         51, 45, 33, 48, 44, 49, 39, 56,
         34, 53, 46, 42, 50, 36, 29, 32]
 
-# Expand matrix to get a 48bits matrix of datas to apply the xor with Ki
+# 每轮迭代中的选择扩展运算，从32bit扩展到48bit
 E = [32, 1, 2, 3, 4, 5,
      4, 5, 6, 7, 8, 9,
      8, 9, 10, 11, 12, 13,
@@ -38,7 +40,7 @@ E = [32, 1, 2, 3, 4, 5,
      24, 25, 26, 27, 28, 29,
      28, 29, 30, 31, 32, 1]
 
-# SBOX
+# SBOX 从48bit压缩到32bit，通过8个选择函数组每个函数组从6bit到4bit
 S_BOX = [
 
     [[14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7],
@@ -90,13 +92,13 @@ S_BOX = [
      ]
 ]
 
-# Permut made after each SBox substitution for each round
+# 经过S-box压缩后进行P置换
 P = [16, 7, 20, 21, 29, 12, 28, 17,
      1, 15, 23, 26, 5, 18, 31, 10,
      2, 8, 24, 14, 32, 27, 3, 9,
      19, 13, 30, 6, 22, 11, 4, 25]
 
-# Final permut for datas after the 16 rounds
+# 16轮迭代完后进行逆初始置换PI_1
 PI_1 = [40, 8, 48, 16, 56, 24, 64, 32,
         39, 7, 47, 15, 55, 23, 63, 31,
         38, 6, 46, 14, 54, 22, 62, 30,
@@ -106,35 +108,36 @@ PI_1 = [40, 8, 48, 16, 56, 24, 64, 32,
         34, 2, 42, 10, 50, 18, 58, 26,
         33, 1, 41, 9, 49, 17, 57, 25]
 
-# Matrix that determine the shift for each round of keys
+# 每轮密钥进行循环左移时的位数
 SHIFT = [1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1]
 
 
-def string_to_bits(string):
+def string_to_bits(string):  # 将字符串变为bit串
     bits = []
     for i in string:
         bits.extend([int(x) for x in binval(i, 8)])  # 8 bits in a group
-    return bits
+    return bits  # 形如[0,0,1,1,···]的list，长度为字符串长度*8
 
 
-def binval(str, lenth):  # convert one character to any bit
+def binval(str, lenth):  # 将一个字符变为8bit
     binvalue = bin(str)[2:] if isinstance(str, int) else bin(ord(str))[2:]
     if len(binvalue) > lenth:
         raise "The character cannot be converted to 8 bits"
     while len(binvalue) < lenth:
         binvalue = "0" + binvalue
-    return binvalue
+    return binvalue  # 返回形如'00110001'的字符串
 
 
-def bits_to_string(text):
+def bits_to_string(bits):  # 将bit串转化为字符串，相当于string_to_bits的逆函数
     output = ''
-    li = split(text, 8)
+    li = split(bits, 8)
     for i in li:
-        output += chr(int(str(''.join([str(x) for x in i])), 2))
+        output += chr(int(''.join([str(x) for x in i]), 2))
     return output
 
 
-def split(list, n):  # 将list分割为n为一组
+def split(list, n):  # 将原list变为含8个元素为一个子list的list
+    # 形如[[0,1,1,···],[1,1,0,···]]
     return [list[k:k+n] for k in range(0, len(list), n)]
 
 
@@ -151,23 +154,26 @@ class DES():
             raise "It is too long! Key should be 8 bytes long"
         self.key = key
         self.text = text
-        self.key_gener()
-        blocks = split(key, 8)
+        self.key_gener()  # 生成子密钥
+        blocks = split(self.text, 8)  # 将输入分为8个字符为一个元素的list
         output = []
-        for block in blocks:
-            block = string_to_bits(block)  # 从字符转到bits
+        for block in blocks:  # 依次对每8个字符进行加密
+            # 将单个字符转到8个bit，8个字符一组便是64个bit，block为64个int型数据的list
+            block = string_to_bits(block)
+            # 16轮迭代之前的初始置换PI，left与right均为32个int型元素的list
             left, right = split(self.substi(block, PI), 32)
             for i in range(16):  # 16轮循环
-                temp = self.expend(right, E)
+                temp = self.expend(right, E)  # 选择扩展运算E 32bit -> 48bit
                 if action == 'ENCRYPT':
                     temp = self.xor(self.round_keys[i], temp)
                 elif action == 'DECRYPT':
-                    temp = self.xor(self.round_keys[15-i], temp)
-                temp = self.s_subti(temp)
-                temp = self.substi(temp, P)
-                temp = self.xor(left, temp)
+                    temp = self.xor(self.round_keys[15-i], temp)  # 解密时轮密钥得反过来
+                temp = self.s_subti(temp)  # S-box选择压缩运算 48bit -> 32bit
+                temp = self.substi(temp, P)  # P置换
+                temp = self.xor(left, temp)  # 与left异或
                 left = right
                 right = temp
+            # 逆初始置换IP_1并将每8个字符加密后的结果连起来
             output += self.substi(right + left, PI_1)
         return bits_to_string(output)
 
@@ -178,25 +184,26 @@ class DES():
         return self.substi(block, table)
 
     def key_gener(self):  # 轮密钥生成
-        key = string_to_bits(self.key)
-        key = self.substi(key, PC_1)
+        key = string_to_bits(self.key)  # 64bit串
+        key = self.substi(key, PC_1)  # PC_1置换 64bit -> 56bit
         left, right = split(key, 28)
-        for i in range(16):  # 共16轮加密
-            left, right = self.shift(left, right, SHIFT[i])
-            self.round_keys.append(self.substi(left + right, PC_2))
+        for i in range(16):  # 共16轮迭代
+            left, right = self.shift(left, right, SHIFT[i])  # 每轮的循环左移
+            self.round_keys.append(self.substi(
+                left + right, PC_2))  # PC_2置换后存入对应轮
 
     def xor(self, x, y):
         return [a ^ b for a, b in zip(x, y)]
 
-    def s_subti(self, text):
-        subblocks = split(text, 6)
-        result = list()
-        for i in range(8):
+    def s_subti(self, text):  # S-box替换
+        subblocks = split(text, 6)  # 每组6bit
+        result = []
+        for i in range(8):  # 一共8个选择压缩函数
             block = subblocks[i]
             row = int(str(block[0])+str(block[5]), 2)
-            column = int(''.join([str(x) for x in block[1:][:-1]]), 2)
+            column = int(''.join([str(block[i]) for i in range(1, 5)]), 2)
             val = S_BOX[i][row][column]
-            bin = binval(val, 4)
+            bin = binval(val, 4)  # 6bit -> 4bit
             result += [int(x) for x in bin]
         return result
 
@@ -216,5 +223,5 @@ if __name__ == '__main__':
     s = DES()
     enc = s.encry(text, key)
     dec = s.decry(enc, key)
-    print('cipher:'+enc)
-    print('plain:'+dec)
+    print('cipher: %r' % enc)
+    print('plain: %r' % dec)
