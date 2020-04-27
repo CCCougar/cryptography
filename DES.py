@@ -190,7 +190,7 @@ class DES():
         for i in range(16):  # 共16轮迭代
             left, right = self.shift(left, right, SHIFT[i])  # 每轮的循环左移
             self.round_keys.append(self.substi(
-                left + right, PC_2))  # PC_2置换后存入对应轮
+                left + right, PC_2))  # PC_2置换后存入对应轮 56bit -> 64bit
 
     def xor(self, x, y):
         return [a ^ b for a, b in zip(x, y)]

@@ -372,7 +372,7 @@ class AES():
 if __name__ == '__main__':
     s = AES()
     secrt = s.encrypt('00112233445566778899aabbccddeeff',
-                      '000102030405060708090a0b0c0d0e0f')
+                      '000102030405060708090a0b0c0d0e0f')  # 暂时只支持138bit的加解密(64位字符串)
     print('密文：%r' % secrt)
     print('明文：%r' % s.decrypt('69c4e0d86a7b0430d8cdb78070b4c55a',
                               '000102030405060708090a0b0c0d0e0f'))
