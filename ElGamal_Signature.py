@@ -19,7 +19,7 @@ def ext_euclid(a, b):
     return old_s, old_t, old_r
 
 
-def inv(a, p):
+def inv(a, p):  # 欧几里得算法求逆元,求a模p的逆 a逆
     _a, _, _ = ext_euclid(a, p)
     return ((_a % p) + p) % p
 
